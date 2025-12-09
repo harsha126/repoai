@@ -18,7 +18,6 @@ export interface AuthState {
     signUp: (userData: SignUpFormValues) => Promise<void>;
     logout: () => Promise<void>;
     login: (credentials: LoginFormValues) => Promise<void>;
-    
 }
 
 const SERVER_URL =
