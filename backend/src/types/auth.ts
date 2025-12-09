@@ -1,8 +1,5 @@
-export interface User {
+export interface AuthUser {
     id: string;
-    name: string | null;
+    name: string;
     email: string;
-    password: string;
-    createdAt: Date;
-    updatedAt: Date;
 }

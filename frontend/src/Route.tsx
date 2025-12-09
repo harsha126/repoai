@@ -20,6 +20,11 @@ const PrivateRoutes = () => {
     return authUser ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
+const PublicRoutes = () => {
+    const { authUser } = useAuthStore();
+    return !authUser ? <Outlet /> : <Navigate to="/" replace />;
+};
+
 const AppRoutes: React.FC = () => {
     const { authUser, checkAuth, isCheckingAuth } = useAuthStore();
 
@@ -38,8 +43,10 @@ const AppRoutes: React.FC = () => {
     return (
         <div className="min-h-screen">
             <Routes>
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/signup" element={<SignUpPage />} />
+                <Route element={<PublicRoutes />}>
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/signup" element={<SignUpPage />} />
+                </Route>
 
                 <Route element={<PrivateRoutes />}>
                     <Route path="/" element={<Dashboard />} />

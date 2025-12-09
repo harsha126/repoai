@@ -4,17 +4,23 @@ import { useForm } from "react-hook-form";
 import { Bot } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
+import { Eye, EyeOff } from "lucide-react";
 
 export type LoginFormValues = {
-    username: string;
+    email: string;
     password: string;
 };
 
 const LoginPage: React.FC = () => {
     const { login, isLoggingIn } = useAuthStore();
-    const { register, handleSubmit } = useForm<LoginFormValues>({
+    const [showPassword, setShowPassword] = React.useState(false);
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<LoginFormValues>({
         defaultValues: {
-            username: "admin",
+            email: "",
             password: "",
         },
     });
@@ -41,17 +47,45 @@ const LoginPage: React.FC = () => {
                 >
                     <input
                         type="text"
-                        className="input input-bordered w-full h-9 bg-[#e6ebf3] border-none text-black text-sm rounded-[2px] focus:outline-none focus:ring-2 focus:ring-[#2196f3]"
-                        {...register("username", { required: true })}
-                        placeholder="Username"
+                        className={`input w-full h-9 bg-[#e6ebf3] border-none text-black text-sm rounded-[2px] 
+                                ${
+                                    errors.email
+                                        ? "ring-2 ring-red-500"
+                                        : "focus:ring-2 focus:ring-[#2196f3]"
+                                }`}
+                        {...register("email", {
+                            required: "Username is required",
+                        })}
+                        placeholder="Email"
                     />
 
-                    <input
-                        type="password"
-                        className="input input-bordered w-full h-9 bg-[#e6ebf3] border-none text-black text-sm rounded-[2px] focus:outline-none focus:ring-2 focus:ring-[#2196f3]"
-                        {...register("password", { required: true })}
-                        placeholder="Password"
-                    />
+                    <div className="relative">
+                        <input
+                            type={showPassword ? "text" : "password"}
+                            className={`input w-full h-9 bg-[#e6ebf3] border-none text-black text-sm rounded-[2px] pr-9
+                            ${
+                                errors.password
+                                    ? "ring-2 ring-red-500"
+                                    : "focus:ring-2 focus:ring-[#2196f3]"
+                            }`}
+                            {...register("password", {
+                                required: "Password is required",
+                            })}
+                            placeholder="Password"
+                        />
+
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-800 z-20"
+                        >
+                            {showPassword ? (
+                                <EyeOff size={18} />
+                            ) : (
+                                <Eye size={18} />
+                            )}
+                        </button>
+                    </div>
 
                     <button
                         type="submit"

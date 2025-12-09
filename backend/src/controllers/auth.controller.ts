@@ -73,3 +73,22 @@ export const login = async (req: Request, res: Response) => {
         res.status(500).json({ message: "Internal Server error" });
     }
 };
+
+export const logout = (req: Request, res: Response) => {
+    try {
+        res.clearCookie("token");
+        res.status(200).json({ message: "Logout successful" });
+    } catch (error) {
+        console.error("Error in logout:", error);
+        res.status(500).json({ message: "Internal Server error" });
+    }
+};
+
+export const checkAuth = async (req: Request, res: Response) => {
+    try {
+        res.status(200).json(req.user);
+    } catch (error) {
+        console.error("Error in checkAuth:", error);
+        res.status(500).json({ message: "Internal Server error" });
+    }
+};
