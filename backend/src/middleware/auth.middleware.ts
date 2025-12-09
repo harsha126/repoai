@@ -21,8 +21,6 @@ export const authenticateToken = async (
 
         const user = jwt.verify(token, secret) as AuthUser;
 
-        console.log("Authenticated user:", user);
-
         const dbUser = await prisma.user.findUnique({
             where: { id: user.id },
         });

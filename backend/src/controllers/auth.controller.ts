@@ -30,7 +30,7 @@ export const signup = async (req: Request, res: Response) => {
         const newUser = await prisma.user.create({
             data: {
                 name,
-                email,
+                email: email.toLowerCase(),
                 password: hashedPassword,
             },
         });
@@ -54,7 +54,9 @@ export const login = async (req: Request, res: Response) => {
             return res.status(400).json({ message: "All feilds are required" });
         }
 
-        const user = await prisma.user.findUnique({ where: { email } });
+        const user = await prisma.user.findUnique({
+            where: { email: email.toLowerCase() },
+        });
         if (!user) {
             return res.status(400).json({ message: "Invalid credentials" });
         }
