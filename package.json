@@ -1,0 +1,13 @@
+{
+    "name": "repoai-monorepo",
+    "private": true,
+    "scripts": {
+        "dev:backend": "cd backend && npm run dev",
+        "dev:frontend": "cd frontend && npm run dev",
+        "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+        "lint": "cd backend && npm run lint && cd ../frontend && npm run lint"
+    },
+    "devDependencies": {
+        "concurrently": "^8.0.0"
+    }
+}
