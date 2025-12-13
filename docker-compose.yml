@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
     db:
-        image: postgres:16-alpine
+        image: pgvector/pgvector:pg16
         container_name: repoai-db
         environment:
             POSTGRES_USER: app
@@ -15,6 +15,21 @@ services:
         networks:
             - app-net
 
+    redis:
+        image: redis:alpine
+        container_name: repoai-redis
+        volumes:
+            - redis_data:/data
+        ports:
+            - "6379:6379"
+        networks:
+            - app-net
+        healthcheck:
+            test: ["CMD", "redis-cli", "ping"]
+            interval: 5s
+            timeout: 3s
+            retries: 5
+
     api:
         build:
             context: ./backend
@@ -22,10 +37,13 @@ services:
         container_name: repoai-api
         depends_on:
             - db
+            - redis
         environment:
             NODE_ENV: production
             PORT: 4000
             DATABASE_URL: postgres://app:app@db:5432/appdb
+            REDIS_HOST: redis 
+            REDIS_PORT: 6379
             OPENAI_API_KEY: ${OPENAI_API_KEY}
         ports:
             - "4000:4000"
@@ -51,3 +69,4 @@ networks:
 
 volumes:
     db_data:
+    redis_data:

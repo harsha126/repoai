@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Job" ALTER COLUMN "error" DROP NOT NULL,
+ALTER COLUMN "localPath" DROP NOT NULL;

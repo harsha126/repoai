@@ -1,0 +1,2 @@
+-- AddForeignKey
+ALTER TABLE "Job" ADD CONSTRAINT "Job_repoId_fkey" FOREIGN KEY ("repoId") REFERENCES "Repo"("id") ON DELETE CASCADE ON UPDATE CASCADE;

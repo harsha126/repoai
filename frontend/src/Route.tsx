@@ -4,16 +4,17 @@ import LoginPage from "./Pages/LoginPage";
 import SignUpPage from "./Pages/SignUpPage";
 import { useAuthStore } from "./store/useAuthStore";
 import { Loader } from "lucide-react";
+import DashBoard from "./components/DashBoard";
 
-const Dashboard = () => (
-    <div className="p-10 text-2xl font-bold">
-        Welcome to the Private Dashboard!
-        <br />
-        <span className="text-sm font-normal text-gray-500">
-            (You are authenticated)
-        </span>
-    </div>
-);
+// const Dashboard = () => (
+//     <div className="p-10 text-2xl font-bold">
+//         Welcome to the Private Dashboard!
+//         <br />
+//         <span className="text-sm font-normal text-gray-500">
+//             (You are authenticated)
+//         </span>
+//     </div>
+// );
 
 const PrivateRoutes = () => {
     const { authUser } = useAuthStore();
@@ -49,7 +50,7 @@ const AppRoutes: React.FC = () => {
                 </Route>
 
                 <Route element={<PrivateRoutes />}>
-                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/" element={<DashBoard />} />
                     {/* <Route path="/settings" element={<Settings />} /> */}
                 </Route>
 
