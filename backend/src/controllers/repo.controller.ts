@@ -3,6 +3,7 @@ import { prisma } from "../prisma";
 import { extractGitHubRepoInfo } from "../utils";
 import { AuthUser } from "../types/auth";
 import { jobQueue, STATUS, STEPS } from "../queueConfig";
+import { ApiResponse, JobDTO } from "../types/response";
 
 export const ingestRepo = async (req: Request, res: Response) => {
     const { repoUrl, token } = req.body;
@@ -61,6 +62,33 @@ export const ingestRepo = async (req: Request, res: Response) => {
     }
 };
 
+export const getAllJobsForGivenUser = async (req: Request, res: Response) => {
+    const user: AuthUser = req.user;
+    if (!user) {
+        return res.status(404).json({ message: "Unauthenticated" });
+    }
+    const userId = user.id;
+    const allJobs: JobDTO[] = [];
+    const allRepos = await prisma.repo.findMany({ where: { userId } });
+    for (const repo of allRepos) {
+        const jobs = await prisma.job.findMany({ where: { repoId: repo.id } });
+        for (const job of jobs) {
+            allJobs.push({
+                jobId: job.id,
+                status: job.status,
+                error: job.error || undefined,
+                repoId: repo.id,
+                repoUrl: repo.url,
+                owner: repo.owner,
+            });
+        }
+    }
+    return res.status(200).json({
+        message: "Successfully fetched all jobs for the user",
+        data: allJobs,
+    } as ApiResponse<JobDTO[]>);
+};
+
 export const getJobStatus = async (req: Request, res: Response) => {
     const { id } = req.params;
     if (!id) {
@@ -79,5 +107,7 @@ export const getJobStatus = async (req: Request, res: Response) => {
             .json({ message: "Job is missing for the given job id" });
     }
 
-    return res.status(200).json({ status: job.status, error: job.error });
+    return res
+        .status(200)
+        .json({ status: job.status, error: job.error, repoId: job.repoId });
 };

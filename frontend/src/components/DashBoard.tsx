@@ -2,6 +2,7 @@ import { ExternalLink, Github, Plus } from "lucide-react";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { useRepoStore } from "../store/useRepoStore";
+import RepoIngestionList from "./RepoIngestionList";
 
 type FormValues = {
     repoUrl: string;
@@ -57,7 +58,6 @@ const DashBoard = () => {
                     <div className="h-[60vh] rounded-lg border border-transparent"></div>
                 </div>
             </main>
-            {/* Modal (daisyUI + controlled) */}
             {isOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20">
                     <div className="bg-[#111318] max-w-md w-full rounded-lg shadow-lg p-6">
@@ -142,6 +142,7 @@ const DashBoard = () => {
                     </div>
                 </div>
             )}
+            <RepoIngestionList />
         </div>
     );
 };
