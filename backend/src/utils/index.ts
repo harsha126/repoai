@@ -39,7 +39,7 @@ Rules:
 - Repository Context is the ONLY source of truth.
 - Conversation History is for understanding the user's intent only.
 - If the answer is not present in the repository context, say:
-  "I could not find this information in the repository."
+  "I could not find this information in the repository. can you please be more specific"
 - Do NOT rely on previous answers as facts.
 - Do NOT hallucinate or assume behavior.
 
@@ -512,7 +512,6 @@ ${texts.join("\n\n")}
     return response.choices[0].message.content;
 }
 
-
 export function isOverviewQuestion(question: string) {
     const q = question.toLowerCase();
 
@@ -524,4 +523,32 @@ export function isOverviewQuestion(question: string) {
         q.includes("high level") ||
         q.includes("summary")
     );
+}
+
+export async function rewriteQuestion(question: string, summary: string) {
+    const prompt = `
+            You are a senior software engineer.
+
+            Rewrite the following question into a more explicit
+            code-search-friendly question.
+
+            Original question:
+            "${question}"
+
+            Original Repository Summary
+            "${summary}"
+
+            Rewrite it to:
+            - Mention possible technical terms
+            - Mention frontend-backend interaction if relevant
+            - Keep it short and precise to the question
+            `;
+
+    const res = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        temperature: 0,
+        messages: [{ role: "user", content: prompt }],
+    });
+
+    return res.choices[0].message.content;
 }
