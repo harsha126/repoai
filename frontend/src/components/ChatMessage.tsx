@@ -10,7 +10,7 @@ export default function ChatMessage({ message }: { message: Message }) {
 
             <div
                 className={`chat-bubble ${
-                    isUser ? "chat-bubble-primary" : "chat-bubble-secondary"
+                    isUser ? "chat-bubble-neutral" : "bg-base-300"
                 }`}
             >
                 {message.isLoading && (
