@@ -10,7 +10,7 @@ import {
 import { logger } from "../logger";
 import { prisma } from "../prisma";
 import { SavedFile } from "./index";
-import { connection as redisPublisher } from "../queueConfig";
+import { publisherConnection } from "../queueConfig";
 export const processFilesForEmbedding = async (
     files: SavedFile[],
     jobId: string
@@ -68,7 +68,7 @@ export const processFilesForEmbedding = async (
 
             const progress = Math.round((processedFiles / files.length) * 100);
             if (processedFiles % 5 === 0 || processedFiles === files.length) {
-                redisPublisher.publish(
+                publisherConnection.publish(
                     "job-updates",
                     JSON.stringify({
                         jobId,

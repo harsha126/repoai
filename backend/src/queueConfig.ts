@@ -7,6 +7,18 @@ export const connection = new IORedis({
     maxRetriesPerRequest: null,
 });
 
+export const subscriberConnection = new IORedis({
+    host: "localhost",
+    port: 6379,
+    maxRetriesPerRequest: null,
+});
+
+export const publisherConnection = new IORedis({
+    host: "localhost",
+    port: 6379,
+    maxRetriesPerRequest: null,
+});
+
 export const jobQueue = new Queue("repo-processor", { connection });
 
 export const STEPS = {

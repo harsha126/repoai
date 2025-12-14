@@ -5,12 +5,11 @@ import authRoute from "./routes/auth.route";
 import cookieParser from "cookie-parser";
 import repoRouter from "./routes/repo.route";
 import chatRouter from "./routes/chat.route";
-
-dotenv.config();
-
 import { Server } from "socket.io";
 import http from "http";
-import { connection as redisSubscriber } from "./queueConfig"; // Reuse redis connection options or import IORedis
+import { subscriberConnection } from "./queueConfig";
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -28,7 +27,7 @@ const io = new Server(httpServer, {
 
 // Redis Subscriber for Worker Events
 
-redisSubscriber.subscribe("job-updates", (err) => {
+subscriberConnection.subscribe("job-updates", (err) => {
     if (err) {
         console.error("Failed to subscribe to job-updates channel:", err);
     } else {
@@ -36,7 +35,7 @@ redisSubscriber.subscribe("job-updates", (err) => {
     }
 });
 
-redisSubscriber.on("message", (channel, message) => {
+subscriberConnection.on("message", (channel, message) => {
     if (channel === "job-updates") {
         try {
             const data = JSON.parse(message);
