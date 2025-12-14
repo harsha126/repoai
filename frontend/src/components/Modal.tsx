@@ -1,5 +1,5 @@
 import { ExternalLink, Github } from "lucide-react";
-import React from "react";
+
 import { useForm } from "react-hook-form";
 import { useRepoStore } from "../store/useRepoStore";
 
@@ -17,7 +17,7 @@ const Modal = ({ closeModal }: ModalProps) => {
     const {
         register,
         handleSubmit,
-        formState: { errors},
+        formState: { errors },
         reset,
     } = useForm<FormValues>({
         defaultValues: { repoUrl: "" },
@@ -31,7 +31,7 @@ const Modal = ({ closeModal }: ModalProps) => {
     const closeModalAndReset = () => {
         closeModal();
         reset({ repoUrl: "" });
-    }
+    };
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20">
             <div className="bg-[#111318] max-w-md w-full rounded-lg shadow-lg p-6">

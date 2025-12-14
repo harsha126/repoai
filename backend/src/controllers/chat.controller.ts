@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { logger } from "../logger";
 import {
     askRepoAI,
     buildRepoContext,
@@ -70,7 +71,7 @@ export const postMessage = async (req: Request, res: Response) => {
         }
     }
     const queryContext = buildRepoContext(topkChucks);
-    console.log(queryContext);
+    logger.debug("Query Context built", { queryContext });
     const formattedChatHistory =
         chatHistory && chatHistory.length > 0
             ? formatChatHistory(chatHistory)

@@ -17,12 +17,12 @@ export interface JobDTO {
 }
 
 const RepoIngestionList: React.FC = () => {
-    const { allJobs, getAllJobs, gettingAllJobs } = useRepoStore();
+    const { allJobs, getAllJobs } = useRepoStore();
     useEffect(() => {
         getAllJobs();
-    }, []);
+    }, [getAllJobs]);
 
-    const cancelJob = async (jobId: string) => {};
+    const cancelJob = async () => {};
 
     if (allJobs.length === 0) {
         return (

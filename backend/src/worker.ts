@@ -1,20 +1,19 @@
 import { Worker } from "bullmq";
 import { connection, jobQueue, STEPS, STATUS } from "./queueConfig";
 import { prisma } from "./prisma";
+import { downloadRepoToTemp } from "./utils";
 import {
-    addChunksToRepo,
-    downloadRepoToTemp,
-    generateEmbedding,
-    generateRepoSummary,
-    splitText,
-} from "./utils";
+    processFilesForEmbedding,
+    saveChunksInBatches,
+    processRepoSummary,
+} from "./utils/worker.utils";
 import fs from "fs/promises";
 import { logger } from "./logger";
 
 interface IJob {
     jobId: string;
     step: string;
-    payload: Record<string, string>;
+    payload: Record<string, any>;
 }
 
 const worker = new Worker(
@@ -104,133 +103,13 @@ const worker = new Worker(
                         status: STATUS.EMBEDDING,
                     });
 
-                    let summarySources: string[] = [];
-                    const allChunksToSave = [];
-                    let processedFiles = 0;
-                    let skippedFiles = 0;
+                    const { allChunksToSave, summarySources } =
+                        await processFilesForEmbedding(files, jobId);
 
-                    for (const file of files) {
-                        try {
-                            const rawContent = await fs.readFile(
-                                file.fullPath,
-                                "utf-8"
-                            );
-                            const textChunks = splitText(rawContent);
+                    await saveChunksInBatches(repoId, allChunksToSave, jobId);
 
-                            const lowerPath = file.relativePath.toLowerCase();
+                    await processRepoSummary(repoId, summarySources, jobId);
 
-                            if (
-                                lowerPath.includes("readme") ||
-                                lowerPath.endsWith("package.json") ||
-                                lowerPath.endsWith("pom.xml") ||
-                                lowerPath.includes("main.") ||
-                                lowerPath.includes("index.") ||
-                                lowerPath.includes("app.") ||
-                                lowerPath.includes("application.") ||
-                                lowerPath.includes("config.")
-                            ) {
-                                summarySources.push(
-                                    `File: ${
-                                        file.relativePath
-                                    }\n\n${rawContent.slice(0, 4000)}`
-                                );
-                            }
-
-                            logger.info("File processed", {
-                                jobId,
-                                fileIndex: processedFiles + 1,
-                                totalFiles: files.length,
-                                chunksGenerated: textChunks.length,
-                            });
-
-                            for (const chunkText of textChunks) {
-                                const vector = await generateEmbedding(
-                                    chunkText
-                                );
-                                allChunksToSave.push({
-                                    text: `File: ${file.relativePath}\n\n${chunkText}`,
-                                    embedding: vector,
-                                });
-                            }
-                            processedFiles++;
-                        } catch (err: any) {
-                            skippedFiles++;
-                            logger.warn("File processing failed, skipping", {
-                                jobId,
-                                error: err.message,
-                                fileIndex: processedFiles + skippedFiles,
-                            });
-                        }
-                    }
-
-                    logger.info("All files processed", {
-                        jobId,
-                        processedFiles,
-                        skippedFiles,
-                        totalChunks: allChunksToSave.length,
-                    });
-
-                    if (allChunksToSave.length > 0) {
-                        const BATCH_SIZE = 50;
-                        const totalBatches = Math.ceil(
-                            allChunksToSave.length / BATCH_SIZE
-                        );
-
-                        logger.info("Starting batch save", {
-                            jobId,
-                            totalChunks: allChunksToSave.length,
-                            batchSize: BATCH_SIZE,
-                            totalBatches,
-                        });
-
-                        for (
-                            let i = 0;
-                            i < allChunksToSave.length;
-                            i += BATCH_SIZE
-                        ) {
-                            const batch = allChunksToSave.slice(
-                                i,
-                                i + BATCH_SIZE
-                            );
-                            await addChunksToRepo(repoId, batch);
-
-                            logger.info("Batch saved", {
-                                jobId,
-                                batchNumber: Math.floor(i / BATCH_SIZE) + 1,
-                                totalBatches,
-                                chunksInBatch: batch.length,
-                                chunksSavedSoFar: i + batch.length,
-                            });
-                        }
-                    } else {
-                        logger.warn("No chunks to save", { jobId });
-                    }
-                    if (summarySources.length > 0) {
-                        logger.info("Generating repository summary", {
-                            jobId,
-                            sourceFiles: summarySources.length,
-                        });
-
-                        const summary = await generateRepoSummary(
-                            summarySources
-                        );
-                        if (summary) {
-                            logger.info(summary);
-                            const rr = JSON.parse(summary || "{}");
-                            await prisma.repo.update({
-                                where: { id: repoId },
-                                data: {
-                                    summary: rr.summary,
-                                    keywords: 
-                                    rr.keywords,
-                                },
-                            });
-                        }
-
-                        logger.info("Repository summary saved", { jobId });
-                    } else {
-                        logger.warn("No summary sources found", { jobId });
-                    }
                     await prisma.job.update({
                         where: { id: jobId },
                         data: { status: STATUS.EMBEDDED },
@@ -238,7 +117,7 @@ const worker = new Worker(
                     logger.info("Job status updated", {
                         jobId,
                         status: STATUS.EMBEDDED,
-                    });
+                    }); // fixed typo EMBEDG -> EMBEDDED in next line logic if it was a string literal but here STATUS.EMBEDDED is an enum/const
 
                     await jobQueue.add("next-step", {
                         jobId,

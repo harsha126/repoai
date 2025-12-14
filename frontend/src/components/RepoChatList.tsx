@@ -1,4 +1,3 @@
-import React from "react";
 import { useRepoStore } from "../store/useRepoStore";
 import { useChatStore } from "../store/useChatStore";
 

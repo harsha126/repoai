@@ -19,7 +19,7 @@ export const useRepoStore = create<RepoState>((set) => ({
     ingestRepo: async (repoUrl: string) => {
         set({ ingestingRepo: true });
         try {
-            const res = await axiosInstance.post("/repo/ingest", {
+            await axiosInstance.post("/repo/ingest", {
                 repoUrl,
             });
             toast.success("Ingestion started Sucessfully");
