@@ -6,6 +6,7 @@ interface RepoState {
     ingestingRepo: boolean;
     gettingAllJobs: boolean;
     allJobs: JobDTO[];
+    allReadyJobs: JobDTO[];
     ingestRepo: (repoUrl: string) => Promise<void>;
     getAllJobs: () => Promise<void>;
 }
@@ -14,6 +15,7 @@ export const useRepoStore = create<RepoState>((set) => ({
     ingestingRepo: false,
     gettingAllJobs: false,
     allJobs: [],
+    allReadyJobs: [],
     ingestRepo: async (repoUrl: string) => {
         set({ ingestingRepo: true });
         try {
@@ -33,8 +35,13 @@ export const useRepoStore = create<RepoState>((set) => ({
         set({ gettingAllJobs: true });
         try {
             const res = await axiosInstance.get("/repo/job");
-            const allJobs = res.data.data;
-            set({ allJobs });
+            const allJobs: JobDTO[] = res.data.data;
+            set({
+                allJobs,
+                allReadyJobs: allJobs.filter(
+                    (job) => job.status == "COMPLETED"
+                ),
+            });
             toast.success(res.data.message ?? "All jobs fetched succesfully");
         } catch (err) {
             console.log("Error while getting all jobs ", err);

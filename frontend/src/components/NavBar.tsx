@@ -7,7 +7,7 @@ const Navbar: React.FC = () => {
     const { authUser, logout } = useAuthStore();
 
     return (
-        <div className="navbar bg-base-200 px-4">
+        <div className="navbar bg-base-200 px-4 flex-none">
             <div className="flex-1 flex items-center gap-3">
                 <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#2196f3] shadow-lg">
                     <Bot className="w-5 h-5 text-white" strokeWidth={2.5} />

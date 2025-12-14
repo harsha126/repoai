@@ -6,9 +6,11 @@ import Navbar from "./components/NavBar";
 function App() {
     return (
         <BrowserRouter>
-            <Toaster />
-            <Navbar/>
-            <AppRoutes />
+            <div className="h-screen flex flex-col">
+                <Toaster />
+                <Navbar />
+                <AppRoutes />
+            </div>
         </BrowserRouter>
     );
 }

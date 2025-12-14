@@ -42,21 +42,19 @@ const AppRoutes: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen">
-            <Routes>
-                <Route element={<PublicRoutes />}>
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/signup" element={<SignUpPage />} />
-                </Route>
+        <Routes>
+            <Route element={<PublicRoutes />}>
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/signup" element={<SignUpPage />} />
+            </Route>
 
-                <Route element={<PrivateRoutes />}>
-                    <Route path="/" element={<DashBoard />} />
-                    {/* <Route path="/settings" element={<Settings />} /> */}
-                </Route>
+            <Route element={<PrivateRoutes />}>
+                <Route path="/" element={<DashBoard />} />
+                {/* <Route path="/settings" element={<Settings />} /> */}
+            </Route>
 
-                <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-        </div>
+            <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
     );
 };
 
