@@ -1,4 +1,5 @@
 import type { ChatMessage as Message } from "../store/useChatStore";
+import Markdown from "react-markdown";
 
 export default function ChatMessage({ message }: { message: Message }) {
     const isUser = message.role === "user";
@@ -15,7 +16,7 @@ export default function ChatMessage({ message }: { message: Message }) {
                 {message.isLoading && (
                     <span className="loading loading-dots loading-sm"></span>
                 )}
-                {!message.isLoading && message.content}
+                {!message.isLoading && <Markdown>{message.content}</Markdown>}
             </div>
         </div>
     );

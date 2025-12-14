@@ -1,4 +1,6 @@
+import toast from "react-hot-toast";
 import { create } from "zustand";
+import { axiosInstance } from "../lib/axios";
 
 export type Role = "user" | "ai";
 
@@ -21,21 +23,28 @@ interface ChatState {
     clearChat: () => void;
 }
 
-export const useChatStore = create<ChatState>((set) => ({
+export const useChatStore = create<ChatState>((set, get) => ({
     isSending: false,
     currentRepo: null,
     messages: [],
     setCurrentRepo: (repoId) => {
         set({ currentRepo: repoId });
     },
-    addUserMessage: (content) =>
-        set((state) => ({
-            messages: [
-                ...state.messages,
-                { id: crypto.randomUUID(), role: "user", content },
-            ],
-            isSending: true,
-        })),
+    addUserMessage: async (content) => {
+        set({ isSending: true });
+        try {
+            set((state) => ({
+                messages: [
+                    ...state.messages,
+                    { id: crypto.randomUUID(), role: "user", content },
+                ],
+            }));
+        } catch (err) {
+            toast.error("error while sending message " + "");
+        } finally {
+            set({ isSending: false });
+        }
+    },
     setAILoading: () =>
         set((state) => ({
             messages: [
@@ -58,14 +67,24 @@ export const useChatStore = create<ChatState>((set) => ({
             isSending: false,
         })),
 
-    addAIMessage: (content) =>
-        set((state) => ({
-            messages: [
-                ...state.messages,
-                { id: crypto.randomUUID(), role: "ai", content },
-            ],
-            isSending: false,
-        })),
+    addAIMessage: async (content) => {
+        const currentRepo = get().currentRepo;
+        const res = await axiosInstance.post("/chat/message/" + currentRepo, {
+            currentMessage: content,
+            chatHistory: [],
+        });
+
+        const { answer } = res.data;
+
+        get().replaceLastAIMessage(answer);
+        // set((state) => ({
+        //     messages: [
+        //         ...state.messages,
+        //         { id: crypto.randomUUID(), role: "ai", content: answer },
+        //     ],
+        //     isSending: false,
+        // }));
+    },
 
     clearChat: () => set({ messages: [], isSending: false }),
 }));

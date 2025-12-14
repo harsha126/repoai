@@ -55,7 +55,7 @@ export const postMessage = async (req: Request, res: Response) => {
         currentMessage
     );
     return res.json({
-        aiRes,
+        answer: aiRes,
         sources: topkChucks.map((c) => ({
             similarity: c.similarity,
         })),

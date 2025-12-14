@@ -6,23 +6,18 @@ export default function ChatInput() {
     const {
         addUserMessage,
         setAILoading,
-        replaceLastAIMessage,
         isSending,
         currentRepo,
+        addAIMessage,
     } = useChatStore();
 
     const sendMessage = async () => {
         if (!input.trim()) return;
 
         addUserMessage(input);
-        setInput("");
         setAILoading();
-
-        setTimeout(() => {
-            replaceLastAIMessage(
-                "This is a mock AI response. Connect your backend here 🤖"
-            );
-        }, 1200);
+        addAIMessage(input);
+        setInput("");
     };
 
     return (
