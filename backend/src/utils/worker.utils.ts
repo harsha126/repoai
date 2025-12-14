@@ -1,4 +1,6 @@
 import fs from "fs/promises";
+import { getEncoding } from "tiktoken";
+import IORedis from "ioredis";
 import {
     splitText,
     generateEmbedding,
@@ -8,7 +10,7 @@ import {
 import { logger } from "../logger";
 import { prisma } from "../prisma";
 import { SavedFile } from "./index";
-
+import { connection as redisPublisher } from "../queueConfig";
 export const processFilesForEmbedding = async (
     files: SavedFile[],
     jobId: string
@@ -17,6 +19,10 @@ export const processFilesForEmbedding = async (
     const allChunksToSave = [];
     let processedFiles = 0;
     let skippedFiles = 0;
+    let totalTokens = 0;
+
+    // Initialize analyzer
+    const enc = getEncoding("cl100k_base");
 
     for (const file of files) {
         try {
@@ -49,12 +55,31 @@ export const processFilesForEmbedding = async (
 
             for (const chunkText of textChunks) {
                 const vector = await generateEmbedding(chunkText);
+
+                const tokens = enc.encode(chunkText).length;
+                totalTokens += tokens;
+
                 allChunksToSave.push({
                     text: `File: ${file.relativePath}\n\n${chunkText}`,
                     embedding: vector,
                 });
             }
             processedFiles++;
+
+            const progress = Math.round((processedFiles / files.length) * 100);
+            if (processedFiles % 5 === 0 || processedFiles === files.length) {
+                redisPublisher.publish(
+                    "job-updates",
+                    JSON.stringify({
+                        jobId,
+                        type: "progress",
+                        progress,
+                        processedFiles,
+                        totalFiles: files.length,
+                        totalTokens,
+                    })
+                );
+            }
         } catch (err: any) {
             skippedFiles++;
             logger.warn("File processing failed, skipping", {
@@ -65,6 +90,8 @@ export const processFilesForEmbedding = async (
         }
     }
 
+    enc.free();
+
     logger.info("All files processed", {
         jobId,
         processedFiles,
@@ -72,7 +99,13 @@ export const processFilesForEmbedding = async (
         totalChunks: allChunksToSave.length,
     });
 
-    return { allChunksToSave, summarySources, processedFiles, skippedFiles };
+    return {
+        allChunksToSave,
+        summarySources,
+        processedFiles,
+        skippedFiles,
+        totalTokens,
+    };
 };
 
 export const saveChunksInBatches = async (

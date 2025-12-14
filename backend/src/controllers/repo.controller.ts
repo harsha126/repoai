@@ -126,3 +126,41 @@ export const getJobStatus = async (req: Request, res: Response) => {
         .status(200)
         .json({ status: job.status, error: job.error, repoId: job.repoId });
 };
+
+export const cancelJob = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    if (!id) {
+        return res.status(400).json({ message: "Job id is required" });
+    }
+
+    try {
+        const job = await prisma.job.findUnique({
+            where: { id },
+            include: { repo: true },
+        });
+
+        if (!job) {
+            return res.status(404).json({ message: "Job not found" });
+        }
+
+        const user: AuthUser = req.user;
+        if (job.repo.userId !== user.id) {
+            return res.status(403).json({ message: "Unauthorized" });
+        }
+        await prisma.repo.delete({
+            where: { id: job.repoId },
+        });
+
+        logger.info(`Job cancelled and repo deleted`, {
+            jobId: id,
+            repoId: job.repoId,
+        });
+
+        return res
+            .status(200)
+            .json({ message: "Job cancelled and repository deleted" });
+    } catch (error: any) {
+        logger.error("Error cancelling job:", error);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+};

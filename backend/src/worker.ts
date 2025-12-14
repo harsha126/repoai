@@ -9,6 +9,7 @@ import {
 } from "./utils/worker.utils";
 import fs from "fs/promises";
 import { logger } from "./logger";
+import { connection as redisPublisher } from "./queueConfig";
 
 interface IJob {
     jobId: string;
@@ -40,6 +41,15 @@ const worker = new Worker(
                         status: STATUS.DOWNLOADING,
                     });
 
+                    await redisPublisher.publish(
+                        "job-updates",
+                        JSON.stringify({
+                            jobId,
+                            type: "status",
+                            status: STATUS.DOWNLOADING,
+                        })
+                    );
+
                     const { tempDir, files } = await downloadRepoToTemp(
                         payload.owner,
                         payload.repo,
@@ -62,6 +72,14 @@ const worker = new Worker(
                         jobId,
                         status: STATUS.DOWNLOADED,
                     });
+                    await redisPublisher.publish(
+                        "job-updates",
+                        JSON.stringify({
+                            jobId,
+                            type: "status",
+                            status: STATUS.DOWNLOADED,
+                        })
+                    );
 
                     await jobQueue.add("next-step", {
                         jobId,
@@ -102,13 +120,29 @@ const worker = new Worker(
                         jobId,
                         status: STATUS.EMBEDDING,
                     });
+                    await redisPublisher.publish(
+                        "job-updates",
+                        JSON.stringify({
+                            jobId,
+                            type: "status",
+                            status: STATUS.EMBEDDING,
+                        })
+                    );
 
-                    const { allChunksToSave, summarySources } =
+                    const { allChunksToSave, summarySources, totalTokens } =
                         await processFilesForEmbedding(files, jobId);
 
                     await saveChunksInBatches(repoId, allChunksToSave, jobId);
 
                     await processRepoSummary(repoId, summarySources, jobId);
+
+                    // Update repo with token count
+                    await prisma.repo.update({
+                        where: { id: repoId },
+                        data: {
+                            tokenCount: totalTokens,
+                        },
+                    });
 
                     await prisma.job.update({
                         where: { id: jobId },
@@ -117,7 +151,15 @@ const worker = new Worker(
                     logger.info("Job status updated", {
                         jobId,
                         status: STATUS.EMBEDDED,
-                    }); // fixed typo EMBEDG -> EMBEDDED in next line logic if it was a string literal but here STATUS.EMBEDDED is an enum/const
+                    });
+                    await redisPublisher.publish(
+                        "job-updates",
+                        JSON.stringify({
+                            jobId,
+                            type: "status",
+                            status: STATUS.EMBEDDED,
+                        })
+                    );
 
                     await jobQueue.add("next-step", {
                         jobId,
@@ -143,6 +185,14 @@ const worker = new Worker(
                         jobId,
                         status: STATUS.CLEANING,
                     });
+                    await redisPublisher.publish(
+                        "job-updates",
+                        JSON.stringify({
+                            jobId,
+                            type: "status",
+                            status: STATUS.CLEANING,
+                        })
+                    );
 
                     if (payload.tempDir) {
                         await fs.rm(payload.tempDir, {
@@ -164,6 +214,14 @@ const worker = new Worker(
                         jobId,
                         status: STATUS.COMPLETED,
                     });
+                    await redisPublisher.publish(
+                        "job-updates",
+                        JSON.stringify({
+                            jobId,
+                            type: "status",
+                            status: STATUS.COMPLETED,
+                        })
+                    );
 
                     break;
                 }

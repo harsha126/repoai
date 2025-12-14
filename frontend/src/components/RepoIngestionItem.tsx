@@ -6,6 +6,7 @@ interface Props {
         status: string;
         error?: string;
         repoUrl: string;
+        tokenCount?: number;
     };
     onCancel: (jobId: string) => void;
 }
@@ -56,6 +57,14 @@ const RepoIngestionItem: React.FC<Props> = ({ job, onCancel }) => {
                         Status:{" "}
                         <span className="font-medium">{job.status}</span>
                     </p>
+                    {job.tokenCount !== undefined && (
+                        <p className="text-xs mt-1 text-slate-400">
+                            Tokens:{" "}
+                            <span className="font-medium">
+                                {job.tokenCount}
+                            </span>
+                        </p>
+                    )}
                 </div>
 
                 {job.status !== "COMPLETED" && job.status !== "FAILED" && (

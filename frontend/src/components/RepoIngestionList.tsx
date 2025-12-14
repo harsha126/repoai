@@ -14,15 +14,21 @@ export interface JobDTO {
     repoId: string;
     repoUrl: string;
     owner: string;
+    tokenCount?: number;
 }
 
 const RepoIngestionList: React.FC = () => {
-    const { allJobs, getAllJobs } = useRepoStore();
+    const { allJobs, getAllJobs, initializeSocket, cancelIngestion } =
+        useRepoStore();
+
     useEffect(() => {
         getAllJobs();
-    }, [getAllJobs]);
+        initializeSocket();
+    }, [getAllJobs, initializeSocket]);
 
-    const cancelJob = async () => {};
+    const cancelJob = async (jobId: string) => {
+        await cancelIngestion(jobId);
+    };
 
     if (allJobs.length === 0) {
         return (
