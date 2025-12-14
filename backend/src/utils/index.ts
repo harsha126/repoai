@@ -195,7 +195,7 @@ export async function downloadRepoToTemp(
 ): Promise<DownloadResult> {
     logger.info("Starting repository download", { owner, repo });
 
-    const url = `https://api.github.com/repos/${owner}/${repo}/zipball/main`;
+    const branches = ["main", "master", "develop"];
     const uniqueId = `${owner}-${repo}-${Date.now()}`;
     const tempDir = path.join(os.tmpdir(), "repo-dl", uniqueId);
 
@@ -209,59 +209,89 @@ export async function downloadRepoToTemp(
         logger.warn("No token provided, using unauthenticated request");
     }
 
-    try {
-        logger.info("Fetching repository from GitHub", { owner, repo });
+    let lastError: any;
 
-        const response = await axios({
-            method: "get",
-            url,
-            responseType: "stream",
-            headers,
-        });
+    // Try each branch until one succeeds
+    for (const branch of branches) {
+        try {
+            const url = `https://api.github.com/repos/${owner}/${repo}/zipball/${branch}`;
+            logger.info("Fetching repository from GitHub", {
+                owner,
+                repo,
+                branch,
+            });
 
-        logger.info("Repository fetched, starting extraction", {
-            owner,
-            repo,
-            tempDir,
-        });
+            const response = await axios({
+                method: "get",
+                url,
+                responseType: "stream",
+                headers,
+            });
 
-        const savedFiles: SavedFile[] = [];
-        let binaryFilesSkipped = 0;
+            logger.info("Repository fetched, starting extraction", {
+                owner,
+                repo,
+                branch,
+                tempDir,
+            });
 
-        await response.data
-            .pipe(unzipper.Parse())
-            .on("entry", async (entry: any) => {
-                const type = entry.type;
-                if (type === "File" && !isBinary(entry.path)) {
-                    const fullPath = path.join(tempDir, entry.path);
-                    fs.mkdirSync(path.dirname(fullPath), { recursive: true });
-                    entry.pipe(fs.createWriteStream(fullPath));
-                    savedFiles.push({
-                        relativePath: entry.path,
-                        fullPath: fullPath,
-                    });
-                } else {
-                    if (type === "File") {
-                        binaryFilesSkipped++;
+            const savedFiles: SavedFile[] = [];
+            let binaryFilesSkipped = 0;
+
+            await response.data
+                .pipe(unzipper.Parse())
+                .on("entry", async (entry: any) => {
+                    const type = entry.type;
+                    if (type === "File" && !isBinary(entry.path)) {
+                        const fullPath = path.join(tempDir, entry.path);
+                        fs.mkdirSync(path.dirname(fullPath), {
+                            recursive: true,
+                        });
+                        entry.pipe(fs.createWriteStream(fullPath));
+                        savedFiles.push({
+                            relativePath: entry.path,
+                            fullPath: fullPath,
+                        });
+                    } else {
+                        if (type === "File") {
+                            binaryFilesSkipped++;
+                        }
+                        entry.autodrain();
                     }
-                    entry.autodrain();
-                }
-            })
-            .promise();
+                })
+                .promise();
 
-        logger.info("Repository download completed", {
-            owner,
-            repo,
-            filesExtracted: savedFiles.length,
-            binaryFilesSkipped,
-            tempDir,
-        });
+            logger.info("Repository download completed", {
+                owner,
+                repo,
+                branch,
+                filesExtracted: savedFiles.length,
+                binaryFilesSkipped,
+                tempDir,
+            });
 
-        return { tempDir, files: savedFiles };
-    } catch (error) {
-        logger.error("Failed to download repository", error, { owner, repo });
-        throw error;
+            return { tempDir, files: savedFiles };
+        } catch (error: any) {
+            lastError = error;
+            logger.warn("Failed to download with branch, trying next", {
+                owner,
+                repo,
+                branch,
+                error: error.message,
+            });
+        }
     }
+
+    logger.error("Failed to download repository from all branches", lastError, {
+        owner,
+        repo,
+        branches,
+    });
+    throw new Error(
+        `Failed to download ${owner}/${repo}. Tried branches: ${branches.join(
+            ", "
+        )}`
+    );
 }
 
 export function formatVector(embedding: number[]): string {
