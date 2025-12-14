@@ -11,6 +11,23 @@ import fs from "fs/promises";
 import { logger } from "./logger";
 import { connection as redisPublisher } from "./queueConfig";
 
+class CancelError extends Error {
+    constructor() {
+        super("Job was cancelled by user");
+        this.name = "CancelError";
+    }
+}
+
+async function assertNotCancelled(jobId: string) {
+    const job = await prisma.job.findUnique({
+        where: { id: jobId },
+        select: { status: true },
+    });
+
+    if (!job || job.status === "CANCELLED") {
+        throw new CancelError();
+    }
+}
 interface IJob {
     jobId: string;
     step: string;
@@ -21,7 +38,7 @@ const worker = new Worker(
     "repo-processor",
     async (job) => {
         const { jobId, step, payload } = job.data;
-
+        await assertNotCancelled(jobId);
         logger.info("Job started", { jobId, step });
 
         try {
@@ -232,6 +249,29 @@ const worker = new Worker(
                 }
             }
         } catch (err) {
+            if (err instanceof CancelError) {
+                console.log(`Job ${jobId} cancelled. Cleaning up...`);
+                await redisPublisher.publish(
+                    "job-updates",
+                    JSON.stringify({
+                        jobId,
+                        type: "status",
+                        status: STATUS.FAILED,
+                    })
+                );
+                if (payload.tempDir) {
+                    await fs
+                        .rm(payload.tempDir, { recursive: true, force: true })
+                        .catch(() => {});
+                }
+
+                await prisma.job.update({
+                    where: { id: jobId },
+                    data: { status: "CANCELLED_AND_CLEANED" },
+                });
+
+                return;
+            }
             logger.error("Job failed", err, { jobId, step });
 
             await prisma.job.update({
@@ -241,6 +281,15 @@ const worker = new Worker(
                     error: (err as Error).message,
                 },
             });
+
+            await redisPublisher.publish(
+                "job-updates",
+                JSON.stringify({
+                    jobId,
+                    type: "status",
+                    status: STATUS.FAILED,
+                })
+            );
 
             throw err;
         }
