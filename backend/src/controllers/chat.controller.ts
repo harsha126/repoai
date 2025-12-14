@@ -7,6 +7,7 @@ import {
     generateEmbedding,
     isOverviewQuestion,
     RepoChunkResult,
+    rewriteQuestion,
     searchRepoChunks,
 } from "../utils";
 import { prisma } from "../prisma";
@@ -23,27 +24,30 @@ export const postMessage = async (req: Request, res: Response) => {
             .status(400)
             .json({ message: "At least one message is required" });
     }
+    const repo = await prisma.repo.findUnique({
+        where: { id: repoId },
+        select: { summary: true, keywords: true },
+    });
     if (isOverviewQuestion(currentMessage)) {
-        const repo = await prisma.repo.findUnique({
-            where: { id: repoId },
-            select: { summary: true },
-        });
-
         return res.json({
             answer: repo?.summary ?? "Summary not available.",
         });
     }
-    const queryEmbeddings = await generateEmbedding(currentMessage);
+
+    const enhancedQuestion = await rewriteQuestion(
+        currentMessage,
+        repo?.summary || ""
+    );
+
+    console.log(enhancedQuestion);
+    const queryEmbeddings = await generateEmbedding(
+        enhancedQuestion || currentMessage
+    );
     const topkChucks: RepoChunkResult[] = await searchRepoChunks(
         repoId,
         queryEmbeddings
     );
     if (!topkChucks || topkChucks.length <= 3) {
-        const repo = await prisma.repo.findFirst({
-            where: {
-                id: repoId,
-            },
-        });
         if (repo && repo.keywords) {
             const keywordChunks = await prisma.repoChunck.findMany({
                 where: {
@@ -80,7 +84,7 @@ export const postMessage = async (req: Request, res: Response) => {
     const aiRes = await askRepoAI(
         queryContext,
         formattedChatHistory,
-        currentMessage
+        enhancedQuestion || currentMessage
     );
     return res.json({
         answer: aiRes,
