@@ -1,5 +1,5 @@
 import fs from "fs/promises";
-import { getEncoding } from "tiktoken";
+import { get_encoding } from "tiktoken";
 import IORedis from "ioredis";
 import {
     splitText,
@@ -22,7 +22,7 @@ export const processFilesForEmbedding = async (
     let totalTokens = 0;
 
     // Initialize analyzer
-    const enc = getEncoding("cl100k_base");
+    const enc = get_encoding("cl100k_base");
 
     for (const file of files) {
         try {
