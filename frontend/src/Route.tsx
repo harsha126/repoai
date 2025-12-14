@@ -2,9 +2,9 @@ import React, { useEffect } from "react";
 import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import LoginPage from "./Pages/LoginPage";
 import SignUpPage from "./Pages/SignUpPage";
-import { useAuthStore } from "./store/useAuthStore";
 import { Loader } from "lucide-react";
 import DashBoard from "./components/DashBoard";
+import { useAuthStore } from "./store/useAuthStore";
 
 // const Dashboard = () => (
 //     <div className="p-10 text-2xl font-bold">

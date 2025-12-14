@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import RepoIngestionItem from "./RepoIngestionItem";
 import { useRepoStore } from "../store/useRepoStore";
 
@@ -18,9 +18,9 @@ export interface JobDTO {
 
 const RepoIngestionList: React.FC = () => {
     const { allJobs, getAllJobs, gettingAllJobs } = useRepoStore();
-    React.useEffect(() => {
+    useEffect(() => {
         getAllJobs();
-    }, [getAllJobs]);
+    }, []);
 
     const cancelJob = async (jobId: string) => {};
 

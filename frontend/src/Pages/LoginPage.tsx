@@ -3,8 +3,8 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { Bot } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useAuthStore } from "../store/useAuthStore";
 import { Eye, EyeOff } from "lucide-react";
+import { useAuthStore } from "../store/useAuthStore";
 
 export type LoginFormValues = {
     email: string;
