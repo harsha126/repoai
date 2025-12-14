@@ -12,13 +12,19 @@ interface Props {
 
 const statusToProgress = (status: string) => {
     switch (status) {
-        case "QUEUED":
-            return 20;
-        case "IN_PROGRESS":
-            return 60;
+        case "PENDING":
+            return 0;
+        case "DOWNLOADING":
+            return 12.5;
+        case "DOWNLOADED":
+            return 25;
+        case "EMBEDDING":
+            return 37.5;
+        case "EMBEDDED":
+            return 50;
+        case "CLEANING":
+            return 75;
         case "COMPLETED":
-            return 100;
-        case "FAILED":
             return 100;
         default:
             return 0;
@@ -42,8 +48,8 @@ const RepoIngestionItem: React.FC<Props> = ({ job, onCancel }) => {
     return (
         <div className="bg-[#111318] rounded-lg p-4 border border-slate-700">
             <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                    <p className="text-sm text-slate-300 truncate">
+                <div className="flex-1 width-[50%]">
+                    <p className="text-sm text-slate-300 truncate text-wrap">
                         {job.repoUrl}
                     </p>
                     <p className="text-xs mt-1 text-slate-400">

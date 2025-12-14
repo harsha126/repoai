@@ -5,6 +5,7 @@ import {
     addChunksToRepo,
     downloadRepoToTemp,
     generateEmbedding,
+    generateRepoSummary,
     splitText,
 } from "./utils";
 import fs from "fs/promises";
@@ -103,6 +104,7 @@ const worker = new Worker(
                         status: STATUS.EMBEDDING,
                     });
 
+                    let summarySources: string[] = [];
                     const allChunksToSave = [];
                     let processedFiles = 0;
                     let skippedFiles = 0;
@@ -114,6 +116,25 @@ const worker = new Worker(
                                 "utf-8"
                             );
                             const textChunks = splitText(rawContent);
+
+                            const lowerPath = file.relativePath.toLowerCase();
+
+                            if (
+                                lowerPath.includes("readme") ||
+                                lowerPath.endsWith("package.json") ||
+                                lowerPath.endsWith("pom.xml") ||
+                                lowerPath.includes("main.") ||
+                                lowerPath.includes("index.") ||
+                                lowerPath.includes("app.") ||
+                                lowerPath.includes("application.") ||
+                                lowerPath.includes("config.")
+                            ) {
+                                summarySources.push(
+                                    `File: ${
+                                        file.relativePath
+                                    }\n\n${rawContent.slice(0, 4000)}`
+                                );
+                            }
 
                             logger.info("File processed", {
                                 jobId,
@@ -184,7 +205,25 @@ const worker = new Worker(
                     } else {
                         logger.warn("No chunks to save", { jobId });
                     }
+                    if (summarySources.length > 0) {
+                        logger.info("Generating repository summary", {
+                            jobId,
+                            sourceFiles: summarySources.length,
+                        });
 
+                        const summary = await generateRepoSummary(
+                            summarySources
+                        );
+
+                        await prisma.repo.update({
+                            where: { id: repoId },
+                            data: { summary },
+                        });
+
+                        logger.info("Repository summary saved", { jobId });
+                    } else {
+                        logger.warn("No summary sources found", { jobId });
+                    }
                     await prisma.job.update({
                         where: { id: jobId },
                         data: { status: STATUS.EMBEDDED },

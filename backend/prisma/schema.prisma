@@ -34,6 +34,7 @@ model Repo {
   updatedAt DateTime     @updatedAt
   jobs      Job[]
   chuncks   RepoChunck[]
+  summary   String?
 }
 
 model Job {

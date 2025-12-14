@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import authRoute from "./routes/auth.route";
 import cookieParser from "cookie-parser";
 import repoRouter from "./routes/repo.route";
+import chatRouter from "./routes/chat.route";
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ app.get("/health", (_req, res) => {
 
 app.use("/api/auth", authRoute);
 app.use("/api/repo", repoRouter);
+app.use("/api/chat", chatRouter);
 
 app.listen(PORT, () => {
     console.log(`API server running on port ${PORT}`);
