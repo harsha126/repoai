@@ -32,7 +32,7 @@ const RepoIngestionList: React.FC = () => {
 
     if (allJobs.length === 0) {
         return (
-            <div className="text-slate-400 text-sm">
+            <div className="text-base-content/50 text-sm italic p-4 text-center">
                 No repository ingestion jobs yet.
             </div>
         );

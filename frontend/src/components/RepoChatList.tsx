@@ -8,15 +8,22 @@ const RepoChatList = () => {
         <div>
             {allReadyJobs.map((job) => (
                 <div
-                    className={`bg-[#111318] rounded-lg p-4 border border-slate-700 mb-2 hover:primary transition-transform duration-300
-                        ${currentRepo == job.repoId ? "bg-base-100" : ""}`}
+                    key={job.jobId}
+                    className={`card bg-base-200 shadow-sm border border-base-300 mb-2 cursor-pointer transition-colors hover:bg-base-300
+                        ${
+                            currentRepo == job.repoId
+                                ? "border-primary bg-base-300"
+                                : ""
+                        }`}
                     onClick={() => setCurrentRepo(job.repoId)}
                 >
-                    <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                            <p className="text-sm text-slate-300 truncate">
-                                {job.repoUrl}
-                            </p>
+                    <div className="card-body p-4">
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                                <p className="text-sm font-medium truncate">
+                                    {job.repoUrl}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>

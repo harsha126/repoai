@@ -47,20 +47,22 @@ const statusColor = (status: string) => {
 
 const RepoIngestionItem: React.FC<Props> = ({ job, onCancel }) => {
     return (
-        <div className="bg-[#111318] rounded-lg p-4 border border-slate-700">
+        <div className="card bg-base-200 shadow-sm border border-base-300 p-4">
             <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 width-[50%]">
-                    <p className="text-sm text-slate-300 truncate text-wrap">
+                    <p className="text-sm font-medium truncate text-wrap">
                         {job.repoUrl}
                     </p>
-                    <p className="text-xs mt-1 text-slate-400">
+                    <p className="text-xs mt-1 text-base-content/60">
                         Status:{" "}
-                        <span className="font-medium">{job.status}</span>
+                        <span className="font-medium text-base-content">
+                            {job.status}
+                        </span>
                     </p>
                     {job.tokenCount !== undefined && (
-                        <p className="text-xs mt-1 text-slate-400">
+                        <p className="text-xs mt-1 text-base-content/60">
                             Tokens:{" "}
-                            <span className="font-medium">
+                            <span className="font-medium text-base-content">
                                 {job.tokenCount}
                             </span>
                         </p>
@@ -84,7 +86,7 @@ const RepoIngestionItem: React.FC<Props> = ({ job, onCancel }) => {
             />
 
             {job.error && (
-                <p className="text-xs text-red-400 mt-2">Error: {job.error}</p>
+                <p className="text-xs text-error mt-2">Error: {job.error}</p>
             )}
         </div>
     );

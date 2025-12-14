@@ -1,12 +1,22 @@
 import { useChatStore } from "../store/useChatStore";
 import ChatMessage from "./ChatMessage";
 import ChatInput from "./ChatInput";
+import { useEffect, useRef } from "react";
 
 export default function ChatWindow() {
     const { messages, clearChat } = useChatStore();
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
 
     return (
-        <div className="flex flex-col h-screen w-full mx-auto bg-base-100">
+        <div className="flex flex-col h-full w-full mx-auto bg-base-100">
             {/* Header */}
             <div className="navbar bg-base-200 px-4">
                 <div className="flex-1 text-lg font-semibold">AI Chat</div>
@@ -25,6 +35,7 @@ export default function ChatWindow() {
                 {messages.map((msg) => (
                     <ChatMessage key={msg.id} message={msg} />
                 ))}
+                <div ref={messagesEndRef} />
             </div>
 
             {/* Input */}
