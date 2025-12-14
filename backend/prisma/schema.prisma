@@ -35,6 +35,7 @@ model Repo {
   jobs      Job[]
   chuncks   RepoChunck[]
   summary   String?
+  keywords  String[]
 }
 
 model Job {

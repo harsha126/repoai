@@ -37,10 +37,37 @@ export const postMessage = async (req: Request, res: Response) => {
         repoId,
         queryEmbeddings
     );
-    if (!topkChucks || topkChucks.length === 0) {
-        return res.json({
-            answer: "I could not find this information in the repository.",
+    if (!topkChucks || topkChucks.length <= 3) {
+        const repo = await prisma.repo.findFirst({
+            where: {
+                id: repoId,
+            },
         });
+        if (repo && repo.keywords) {
+            const keywordChunks = await prisma.repoChunck.findMany({
+                where: {
+                    repoId,
+                    OR: repo.keywords.map((keyword) => ({
+                        content: {
+                            contains: keyword,
+                            mode: "insensitive",
+                        },
+                    })),
+                },
+            });
+
+            const keyWordsEmbeddings = await generateEmbedding(
+                keywordChunks.reduce((full, curr) => {
+                    return full + curr + "\n";
+                }, "")
+            );
+            const keywordEmChunks = await searchRepoChunks(
+                repoId,
+                keyWordsEmbeddings
+            );
+
+            topkChucks.push(...keywordEmChunks);
+        }
     }
     const queryContext = buildRepoContext(topkChucks);
     console.log(queryContext);

@@ -30,7 +30,7 @@ const DashBoard = () => {
                             </h3>
                             <RepoIngestionList />
                         </div>
-                        <div>
+                        <div className="max-h-[350px] overflow-y-auto scrollbar-thin scrollbar-thumb-base-content/20 scrollbar-track-base-200">
                             <h3 className="text-xs font-bold text-base-content/60 uppercase tracking-wider mb-3 px-1">
                                 Chat Ready
                             </h3>

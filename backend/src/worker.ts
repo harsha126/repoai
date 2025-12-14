@@ -214,11 +214,18 @@ const worker = new Worker(
                         const summary = await generateRepoSummary(
                             summarySources
                         );
-
-                        await prisma.repo.update({
-                            where: { id: repoId },
-                            data: { summary },
-                        });
+                        if (summary) {
+                            logger.info(summary);
+                            const rr = JSON.parse(summary || "{}");
+                            await prisma.repo.update({
+                                where: { id: repoId },
+                                data: {
+                                    summary: rr.summary,
+                                    keywords: 
+                                    rr.keywords,
+                                },
+                            });
+                        }
 
                         logger.info("Repository summary saved", { jobId });
                     } else {

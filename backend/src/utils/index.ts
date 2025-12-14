@@ -485,6 +485,8 @@ export async function generateRepoSummary(texts: string[]) {
     const prompt = `
 You are a senior software engineer.
 
+firstly 
+
 Based ONLY on the following repository files,
 write a concise technical summary explaining:
 
@@ -498,13 +500,36 @@ If information is missing, say so.
 
 Repository Content:
 ${texts.join("\n\n")}
+
+secondly based on the content given create a array of ten keywords , needs to be unique , relevant to content like 
+
+- technology used
+- packages used
+- languages used
+- system design principles used
+
+your output needs to in json format only 
+
+here is a example response 
+
+{
+    "summary" : "this is a example summary ....",
+    "keywords" : ["react","java","python"]
+}
+
+follow the response pattern
+
 `;
 
     const response = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         temperature: 0,
         messages: [
-            { role: "system", content: "You summarize software repositories." },
+            {
+                role: "system",
+                content:
+                    "You summarize and retrive keywords from software repositories.",
+            },
             { role: "user", content: prompt },
         ],
     });
