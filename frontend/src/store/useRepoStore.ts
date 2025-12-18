@@ -34,7 +34,7 @@ export const useRepoStore = create<RepoState>((set, get) => ({
 
         socket.on("job-progress", (data: any) => {
             console.log("Job progress:", data);
-            const { jobId, type, status, progress, totalTokens } = data;
+            const { jobId, type, status, totalTokens } = data;
 
             set((state) => {
                 const updatedJobs = state.allJobs.map((job) => {

@@ -19,7 +19,8 @@ WORKDIR /app
 RUN npm install -g serve
 
 # Copy built files
-COPY --from=builder /app/dist ./dist  # if using Vite
+COPY --from=builder /app/dist ./dist  
+# if using Vite
 # or: COPY --from=builder /app/build ./build
 
 EXPOSE 3000

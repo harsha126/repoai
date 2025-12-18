@@ -59,6 +59,9 @@ Rules:
 - Do NOT invent functionality that is not supported by the code.
 - Do NOT rely on previous answers as facts.
 - Do NOT hallucinate or assume behavior.
+- Always respond in Markdown.
+- Use fenced code blocks with language identifiers if there is a code snippet involved.
+
 
    Be concise and technical.
 
@@ -599,6 +602,9 @@ export function isOverviewQuestion(question: string) {
 }
 
 export async function rewriteQuestion(question: string, summary: string) {
+    logger.info("Original question", {
+        originalQuestion: question,
+    });
     const prompt = `
             You are a senior software engineer.
 
@@ -615,6 +621,7 @@ export async function rewriteQuestion(question: string, summary: string) {
             - Mention possible technical terms
             - Mention frontend-backend interaction if relevant
             - Keep it short and precise to the question
+            - Understand the intent behind the question and Think like a engineer generate related strong keywords with the given repo summary 
             `;
 
     const res = await openai.chat.completions.create({
@@ -622,6 +629,8 @@ export async function rewriteQuestion(question: string, summary: string) {
         temperature: 0,
         messages: [{ role: "user", content: prompt }],
     });
-
+    logger.info("Re written question", {
+        rewrittenQuestions: res.choices[0].message.content,
+    });
     return res.choices[0].message.content;
 }
