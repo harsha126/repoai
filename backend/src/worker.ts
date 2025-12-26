@@ -296,6 +296,7 @@ const worker = new Worker(
     },
     {
         connection,
+        concurrency: 4,
     }
 );
 
